@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Library Management System</title>
+    <style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin-top: 20px;
+      }
+
+      .pagination li {
+        margin-right: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Library Management System</h1>
+    <div>
+      <label for="search">Search:</label>
+      <input type="text" id="search" oninput="searchBooks()" />
+    </div>
+    <table id="books-list">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Author</th>
+          <th>Subject</th>
+          <th>Date Published</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <ul class="pagination" id="pagination"></ul>
+
+    <script>
+      const booksTable = document
+        .getElementById("books-list")
+        .getElementsByTagName("tbody")[0];
+      const paginationElement = document.getElementById("pagination");
+      const searchInput = document.getElementById("search");
+      const itemsPerPage = 10;
+
+      const formatDateString = (dateString) => {
+        const options = { year: "numeric", month: "2-digit", day: "2-digit" };
+        const date = new Date(dateString);
+        return date.toLocaleDateString("en-US", options);
+      };
+
+      const renderBooks = (books) => {
+        booksTable.innerHTML = "";
+        books.forEach((book) => {
+          const formattedDate = formatDateString(book.PublishDate);
+
+          const row = booksTable.insertRow();
+          row.innerHTML = `
+        <td>${book.Title}</td>
+        <td>${book.Author}</td>
+        <td>${book.Subject}</td>
+        <td>${formattedDate}</td>
+      `;
+        });
+      };
+
+      const renderPagination = (totalPages, currentPage) => {
+        paginationElement.innerHTML = "";
+        for (let i = 1; i <= totalPages; i++) {
+          const li = document.createElement("li");
+          li.innerHTML = `<a href="#" onclick="getBooks(${i})">${i}</a>`;
+          if (i === currentPage) {
+            li.classList.add("active");
+          }
+          paginationElement.appendChild(li);
+        }
+      };
+
+      const searchBooks = () => {
+        const searchTerm = searchInput.value.trim();
+        getBooks(1, searchTerm);
+      };
+
+      const getBooks = (page, searchTerm = "") => {
+        const url = `http://localhost:3000/books?page=${page}&limit=${itemsPerPage}&search=${searchTerm}`;
+
+        // const url = `/api/books?page=${page}&limit=${itemsPerPage}&search=${searchTerm}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            renderBooks(data.books);
+            renderPagination(data.totalPages, page);
+          })
+          .catch((error) => console.error("Error fetching data:", error));
+      };
+
+      getBooks(1);
+    </script>
+  </body>
+</html>
